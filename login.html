@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Home Key Reality Pvt. Ltd</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="login.css">
+    <style>
+        .custom-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .custom-modal.active {
+            display: flex;
+            opacity: 1;
+            animation: fadeIn 0.3s forwards;
+        }
+        .custom-modal-content {
+            background: var(--bg-main);
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            transform: translateY(20px);
+            animation: slideUp 0.3s forwards;
+        }
+        @keyframes fadeIn { to { opacity: 1; } }
+        @keyframes slideUp { to { transform: translateY(0); } }
+        .custom-modal-content h3 {
+            margin-bottom: 10px;
+            color: var(--text-dark);
+            font-size: 1.5rem;
+        }
+        .custom-modal-content p {
+            margin-bottom: 20px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <!-- Logo Header -->
+        <div class="auth-header">
+            <div class="logo" style="cursor: pointer;" onclick="window.location.href='index.html'">Home Key Reality <span>Pvt. Ltd</span></div>
+            <p id="auth-subtitle">Welcome back! Please enter your details.</p>
+        </div>
+
+        <div class="auth-card">
+            <!-- Tabs -->
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button id="tab-login" class="btn-primary" style="flex: 1; padding: 10px;">Sign In</button>
+                <button id="tab-register" class="btn-outline" style="flex: 1; padding: 10px;">Create Account</button>
+            </div>
+
+            <!-- Login Form -->
+            <form class="auth-form" id="login-form">
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" id="login-email" class="input-control" placeholder="name@company.com" required>
+                </div>
+
+                <div class="input-group">
+                    <div class="label-row">
+                        <label>Password</label>
+                        <a href="#" class="forgot-pwd">Forgot password?</a>
+                    </div>
+                    <div style="position: relative;">
+                        <input type="password" id="login-pwd" class="input-control" placeholder="••••••••" required>
+                        <span id="toggle-pwd" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted); font-size: 18px;">👁️</span>
+                    </div>
+                </div>
+
+                <div class="remember-me">
+                    <input type="checkbox" id="remember">
+                    <label for="remember">Remember me for 30 days</label>
+                </div>
+
+                <button type="submit" class="btn-primary btn-login">Sign In</button>
+            </form>
+
+            <!-- Register Form (Hidden by default) -->
+            <form class="auth-form" id="register-form" style="display: none;">
+                <div class="input-group">
+                    <label>Full Name</label>
+                    <input type="text" id="reg-name" class="input-control" placeholder="John Doe" required>
+                </div>
+                
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" id="reg-email" class="input-control" placeholder="name@company.com" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="reg-pwd" class="input-control" placeholder="Min 6 characters" required minlength="6">
+                </div>
+
+                <div class="input-group">
+                    <label>Role</label>
+                    <select id="reg-role" class="input-control" required>
+                        <option value="user">Property Seeker</option>
+                        <option value="broker">Broker / Agent</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-primary btn-register">Create Account</button>
+            </form>
+        </div>
+
+        <a href="index.html" class="back-home">← Back to Home</a>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgot-modal" class="custom-modal">
+        <div class="custom-modal-content">
+            <h3 id="modal-title">Reset Password</h3>
+            <p id="modal-desc">Enter your registered Email ID to receive an OTP.</p>
+            
+            <div id="modal-step-1">
+                <input type="email" id="modal-email" class="input-control" placeholder="Email Address">
+                <button class="btn-primary" id="btn-send-otp" style="width: 100%; margin-top: 15px;">Send OTP</button>
+            </div>
+            
+            <div id="modal-step-2" style="display: none;">
+                <input type="text" id="modal-otp" class="input-control" placeholder="6-digit OTP" style="letter-spacing: 2px; text-align: center; font-weight: bold;">
+                <input type="password" id="modal-new-pwd" class="input-control" placeholder="New Password (min 6 chars)" style="margin-top: 10px;">
+                <button class="btn-primary" id="btn-reset-pwd" style="width: 100%; margin-top: 15px;">Reset Password</button>
+            </div>
+            
+            <button class="btn-outline" id="btn-close-modal" style="width: 100%; margin-top: 10px; border: none; background: transparent;">Cancel</button>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        // Password Toggle
+        const togglePwd = document.getElementById('toggle-pwd');
+        const loginPwd = document.getElementById('login-pwd');
+        togglePwd.addEventListener('click', () => {
+            const type = loginPwd.getAttribute('type') === 'password' ? 'text' : 'password';
+            loginPwd.setAttribute('type', type);
+            togglePwd.innerText = type === 'password' ? '👁️' : '🙈';
+        });
+
+        // UX Utilities
+        function showLoader() {
+            let loader = document.querySelector('.global-loader');
+            if (!loader) {
+                loader = document.createElement('div');
+                loader.className = 'global-loader';
+                loader.innerHTML = '<div class="spinner"></div>';
+                document.body.appendChild(loader);
+            }
+            loader.classList.add('active');
+        }
+
+        function hideLoader() {
+            const loader = document.querySelector('.global-loader');
+            if (loader) loader.classList.remove('active');
+        }
+
+        function showToast(message, type = 'success') {
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = message;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s forwards ease-in';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Forgot Password logic (Custom Modal)
+        const forgotModal = document.getElementById('forgot-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDesc = document.getElementById('modal-desc');
+        const step1 = document.getElementById('modal-step-1');
+        const step2 = document.getElementById('modal-step-2');
+        const btnCloseModal = document.getElementById('btn-close-modal');
+        
+        let resetEmail = '';
+
+        document.querySelector('.forgot-pwd').addEventListener('click', function(e) {
+            e.preventDefault();
+            forgotModal.classList.add('active');
+            step1.style.display = 'block';
+            step2.style.display = 'none';
+            modalTitle.innerText = "Reset Password";
+            modalDesc.innerText = "Enter your registered Email ID to receive an OTP.";
+        });
+
+        btnCloseModal.addEventListener('click', () => {
+            forgotModal.classList.remove('active');
+        });
+
+        document.getElementById('btn-send-otp').addEventListener('click', async () => {
+            const email = document.getElementById('modal-email').value;
+            if (!email) { showToast("Please enter email", "error"); return; }
+            resetEmail = email;
+
+            showLoader();
+            try {
+                const res = await fetch(`${window.api.API_BASE_URL}/auth/forgotpassword`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+                hideLoader();
+                
+                if (data.success) {
+                    showToast('OTP sent to your email!', 'success');
+                    step1.style.display = 'none';
+                    step2.style.display = 'block';
+                    modalTitle.innerText = "Enter OTP";
+                    modalDesc.innerText = "Enter the 6-digit OTP and your new password.";
+                } else {
+                    showToast(data.error || "Failed to initiate reset.", "error");
+                }
+            } catch (err) {
+                hideLoader();
+                showToast("Server error during password reset.", "error");
+            }
+        });
+
+        document.getElementById('btn-reset-pwd').addEventListener('click', async () => {
+            const otp = document.getElementById('modal-otp').value;
+            const newPassword = document.getElementById('modal-new-pwd').value;
+            
+            if (!otp || !newPassword || newPassword.length < 6) {
+                showToast("Invalid OTP or password (min 6 chars)", "error"); return;
+            }
+
+            showLoader();
+            try {
+                const resetRes = await fetch(`${window.api.API_BASE_URL}/auth/resetpassword/${otp}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: newPassword })
+                });
+                
+                const resetData = await resetRes.json();
+                hideLoader();
+                
+                if (resetData.success) {
+                    localStorage.setItem('token', resetData.token);
+                    localStorage.setItem('user', JSON.stringify(resetData.user));
+                    showToast("Password reset successfully! Redirecting...", "success");
+                    forgotModal.classList.remove('active');
+                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+                } else {
+                    showToast(resetData.error || "Failed to reset password.", "error");
+                }
+            } catch (err) {
+                hideLoader();
+                showToast("Server error during password reset.", "error");
+            }
+        });
+
+        // Attach authentication logic
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault(); 
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-pwd').value;
+            const btn = document.querySelector('.btn-login');
+            const authCard = document.querySelector('.auth-card');
+
+            btn.disabled = true;
+            btn.innerText = 'Signing In...';
+            showLoader();
+
+            try {
+                const response = await fetch(`${window.api.API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    showToast('Login Successful! Redirecting...', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                } else {
+                    authCard.classList.remove('shake');
+                    void authCard.offsetWidth; // trigger reflow
+                    authCard.classList.add('shake');
+                    showToast(data.error || 'Login failed', 'error');
+                    btn.disabled = false;
+                    btn.innerText = 'Sign In';
+                }
+            } catch (err) {
+                console.error(err);
+                authCard.classList.remove('shake');
+                void authCard.offsetWidth; // trigger reflow
+                authCard.classList.add('shake');
+                showToast('Server error. Please try again later.', 'error');
+                btn.disabled = false;
+                btn.innerText = 'Sign In';
+            } finally {
+                hideLoader();
+            }
+        });
+
+        // Toggle Login / Register
+        const tabLogin = document.getElementById('tab-login');
+        const tabRegister = document.getElementById('tab-register');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const authSubtitle = document.getElementById('auth-subtitle');
+
+        tabLogin.addEventListener('click', () => {
+            tabLogin.className = 'btn-primary';
+            tabRegister.className = 'btn-outline';
+            loginForm.style.display = 'flex';
+            registerForm.style.display = 'none';
+            authSubtitle.innerText = 'Welcome back! Please enter your details.';
+        });
+
+        tabRegister.addEventListener('click', () => {
+            tabRegister.className = 'btn-primary';
+            tabLogin.className = 'btn-outline';
+            registerForm.style.display = 'flex';
+            loginForm.style.display = 'none';
+            authSubtitle.innerText = 'Create an account to start your journey.';
+        });
+
+        // Register Logic
+        document.getElementById('register-form').addEventListener('submit', async function(e) {
+            e.preventDefault(); 
+            
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-pwd').value;
+            const role = document.getElementById('reg-role').value;
+            
+            const btn = document.querySelector('.btn-register');
+            const authCard = document.querySelector('.auth-card');
+
+            btn.disabled = true;
+            btn.innerText = 'Creating Account...';
+            showLoader();
+
+            try {
+                const response = await fetch(`${window.api.API_BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password, role })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    showToast('Account Created! Redirecting...', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                } else {
+                    authCard.classList.remove('shake');
+                    void authCard.offsetWidth;
+                    authCard.classList.add('shake');
+                    showToast(data.error || 'Registration failed', 'error');
+                    btn.disabled = false;
+                    btn.innerText = 'Create Account';
+                }
+            } catch (err) {
+                console.error(err);
+                authCard.classList.remove('shake');
+                void authCard.offsetWidth;
+                authCard.classList.add('shake');
+                showToast('Server error. Please try again later.', 'error');
+                btn.disabled = false;
+                btn.innerText = 'Create Account';
+            } finally {
+                hideLoader();
+            }
+        });
+    </script>
+<script>
+    document.querySelectorAll('section, .card, .p-content, .auth-container, .info-card, .form-container, .header-details, .gallery-grid').forEach((el, index) => {
+        el.classList.add('reveal');
+        el.style.transitionDelay = (index % 5) * 0.1 + 's';
+    });
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) entry.target.classList.add('active');
+        });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

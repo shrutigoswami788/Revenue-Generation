@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Properties in Bangalore | Home Key Reality Pvt. Ltd</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="propList.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="container nav-box">
+            <div class="logo" style="cursor: pointer;" onclick="window.location.href='index.html'">Home Key Reality <span>Pvt. Ltd</span></div>
+            <nav class="links">
+                <a href="index.html">Home</a>
+                <a href="propList.html" class="active" target="_blank">Properties</a>
+                <a href="contact.html" target="_blank">Contact</a>
+            </nav>
+            <button class="btn-primary" onclick="window.open('login.html', '_blank')">Login</button>
+        </div>
+    </header>
+
+    <main class="listing-page container">
+        
+        <!-- Left Sidebar Filter -->
+        <aside class="sidebar">
+            <div class="card filter-card" style="padding: 32px;">
+                <h3>Filters</h3>
+                
+                <!-- Buy/Rent Toggle -->
+                <div class="filter-section">
+                    <label>List Type</label>
+                    <div class="toggle-group">
+                        <input type="radio" name="type" id="buy" checked>
+                        <label for="buy">Buy</label>
+                        <input type="radio" name="type" id="rent">
+                        <label for="rent">Rent</label>
+                    </div>
+                </div>
+
+                <!-- Price Range -->
+                <div class="filter-section">
+                    <label>Max Price (₹)</label>
+                    <input type="range" id="price-filter" class="range-input" min="20" max="500" step="10" value="500">
+                    <div class="range-labels">
+                        <span>20 L</span>
+                        <span id="price-display">5.00 Cr</span>
+                    </div>
+                </div>
+
+                <!-- Area -->
+                <div class="filter-section">
+                    <label>Neighborhood</label>
+                    <select class="select-input" id="neighborhood-filter">
+                        <option value="All Bangalore">All Bangalore</option>
+                        <option value="Whitefield">Whitefield</option>
+                        <option value="Marathahalli">Marathahalli</option>
+                        <option value="Electronic City">Electronic City</option>
+                        <option value="Sarjapur Road">Sarjapur Road</option>
+                        <option value="HSR Layout">HSR Layout</option>
+                    </select>
+                </div>
+
+                <!-- BHK Type -->
+                <div class="filter-section">
+                    <label>BHK Type</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" value="1" class="bhk-cb"> 1 BHK</label>
+                        <label><input type="checkbox" value="2" class="bhk-cb"> 2 BHK</label>
+                        <label><input type="checkbox" value="3" class="bhk-cb"> 3 BHK</label>
+                        <label><input type="checkbox" value="4+" class="bhk-cb"> 4+ BHK</label>
+                    </div>
+                </div>
+
+                <button class="btn-primary btn-apply" id="apply-filters-btn">Apply Filters</button>
+            </div>
+        </aside>
+
+        <!-- Right Side Properties -->
+        <section class="main-content">
+            <div class="results-header">
+                <h2>Apartments for Sale in <span>Bangalore</span></h2>
+                <div class="sorting">
+                    <label>Sort by:</label>
+                    <select>
+                        <option>Newest First</option>
+                        <option>Price: Low to High</option>
+                        <option>Price: High to Low</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="property-grid" id="dynamic-property-grid">
+                <!-- Data injected dynamically from Dashboard -->
+            </div>
+            <button class="btn-primary" id="btn-show-all" style="margin: 40px auto; display: block; font-size: 16px;">Buy / Show All Properties</button>
+        </section>
+
+    </main>
+
+    <!-- Floating Home Button -->
+    <button class="fab" onclick="window.location.href='index.html'" title="Back to Home">
+        🏠
+    </button>
+
+    <script src="js/config.js"></script>
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const grid = document.querySelector('.property-grid');
+            
+            function renderCards(properties) {
+                grid.innerHTML = '';
+                if (properties.length > 0) {
+                    properties.forEach(prop => {
+                        const card = document.createElement('div');
+                        card.className = 'card listing-card reveal'; 
+                        card.setAttribute('data-type', prop.listingType || 'buy');
+                        card.setAttribute('data-bhk', prop.bhk || '2'); 
+                        card.setAttribute('data-loc', prop.loc || '');
+                        
+                        const imageSrc = (prop.images && prop.images.length > 0) ? prop.images[0] : 'https://via.placeholder.com/300x200';
+                        
+                        card.innerHTML = `
+                            <div class="l-img">
+                                <span class="badge badge-primary tag" style="display: flex; align-items: center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-right:4px"><polyline points="20 6 9 17 4 12"></polyline></svg> ${prop.tag || 'New'}</span>
+                                <img src="${imageSrc}" alt="property">
+                            </div>
+                            <div class="l-info">
+                                <div class="l-price">${window.api.formatPrice(prop.price)}</div>
+                                <h3>${prop.title}</h3>
+                                <p class="l-loc">📍 ${prop.loc}</p>
+                                <p class="l-desc">${prop.desc}</p>
+                                <button class="btn-outline" style="width: 100%;" onclick="window.location.href='propDetail.html?id=${prop._id}'">View Details</button>
+                            </div>
+                        `;
+                        grid.prepend(card); 
+                        if (typeof observer !== 'undefined') observer.observe(card);
+                        else setTimeout(() => card.classList.add('active'), 50);
+                    });
+                } else {
+                    grid.innerHTML = '<p style="text-align: center; width: 100%; margin: 40px 0;">No properties match your filters.</p>';
+                }
+            }
+            
+            // Read query params from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialLocation = urlParams.get('location');
+            const initialType = urlParams.get('type') || 'buy';
+
+            if (initialType === 'rent') {
+                document.getElementById('rent').checked = true;
+            } else {
+                document.getElementById('buy').checked = true;
+            }
+
+            // Prevent browser from restoring old checkbox states
+            document.querySelectorAll('.bhk-cb').forEach(cb => cb.checked = false);
+
+            if (initialLocation && initialLocation.trim() !== '') {
+                // If the search location matches one of our predefined options, select it
+                const selectElement = document.getElementById('neighborhood-filter');
+                const matchingOption = Array.from(selectElement.options).find(opt => 
+                    opt.value.toLowerCase() === initialLocation.toLowerCase()
+                );
+                
+                if (matchingOption) {
+                    selectElement.value = matchingOption.value;
+                } else {
+                    // It's a custom search term, we can fetch using it
+                    // The backend API handles location regex search seamlessly!
+                    // Let's pass it in the initial fetch.
+                }
+            }
+
+            // Initial Fetch
+            async function fetchAndRenderProperties(queryString = '') {
+                try {
+                    const skeletonHTML = `
+                        <div class="card listing-card skeleton-card" style="display:flex; flex-direction:column;">
+                            <div class="skeleton-img skeleton"></div>
+                            <div class="l-info" style="padding: 24px;">
+                                <div class="skeleton-text skeleton"></div>
+                                <div class="skeleton-text short skeleton" style="margin-top: 8px;"></div>
+                                <div class="skeleton-text skeleton" style="margin-top: 24px;"></div>
+                            </div>
+                        </div>
+                    `;
+                    grid.innerHTML = skeletonHTML + skeletonHTML + skeletonHTML + skeletonHTML;
+                    
+                    const cacheBuster = queryString.includes('?') ? `&_t=${new Date().getTime()}` : `?_t=${new Date().getTime()}`;
+                    const result = await fetch(`${window.api.API_BASE_URL}/properties${queryString}${cacheBuster}`);
+                    const data = await result.json();
+                    
+                    renderCards(data.data || []);
+                } catch (err) {
+                    console.error("Failed to load properties:", err);
+                    grid.innerHTML = '<p style="text-align: center; width: 100%; margin: 40px 0; color: red;">Failed to load properties from server.</p>';
+                }
+            }
+            
+            // Build initial query string based on URL params or defaults
+            let initialQs = `?listingType=${initialType}`;
+            if (initialLocation && initialLocation.trim() !== '') {
+                initialQs += `&location=${encodeURIComponent(initialLocation)}`;
+            }
+            fetchAndRenderProperties(initialQs);
+            
+            
+            // --- Filter Functionality ---
+            const priceFilter = document.getElementById('price-filter');
+            const priceDisplay = document.getElementById('price-display');
+            const applyBtn = document.getElementById('apply-filters-btn');
+
+            // --- Property Visibility Logic ---
+            const showAllBtn = document.getElementById('btn-show-all');
+            
+            // Function to initially hide cards beyond the first 3
+            // Now handled dynamically, but we can hide the showAllBtn 
+            if (showAllBtn) {
+                showAllBtn.style.display = 'none';
+            }
+            
+            // Apply the default 'buy' filter right after loading
+            // fetchAndRenderProperties already does this. We don't need to click applyBtn immediately.
+
+            // When "Buy/Show All" is clicked, reveal everything
+            if (showAllBtn) {
+                showAllBtn.addEventListener('click', () => {
+                    const currentCards = document.querySelectorAll('.listing-card');
+                    currentCards.forEach(card => {
+                        card.style.display = 'flex';
+                        card.style.flexDirection = 'column'; // Maintain card layout
+                    });
+                    showAllBtn.style.display = 'none'; // Hide button after clicking
+                });
+            }
+
+            if (priceFilter) {
+                // Update display label in realtime when sliding
+                priceFilter.addEventListener('input', (e) => {
+                    const val = parseInt(e.target.value);
+                    if (val >= 100) {
+                        priceDisplay.innerText = (val / 100).toFixed(2) + ' Cr';
+                    } else {
+                        priceDisplay.innerText = val + ' L';
+                    }
+                });
+
+                // Auto-apply filters when toggling Buy/Rent
+                document.getElementById('buy').addEventListener('change', () => applyBtn.click());
+                document.getElementById('rent').addEventListener('change', () => applyBtn.click());
+                
+                // Auto-apply filters when toggling Neighborhood or BHK
+                document.getElementById('neighborhood-filter').addEventListener('change', () => applyBtn.click());
+                document.querySelectorAll('.bhk-cb').forEach(cb => {
+                    cb.addEventListener('change', () => applyBtn.click());
+                });
+
+            // Apply button fetches from backend
+                applyBtn.addEventListener('click', () => {
+                    const maxLakhs = parseInt(priceFilter.value);
+                    const isBuy = document.getElementById('buy').checked;
+                    const filterType = isBuy ? 'buy' : 'rent';
+                    
+                    const neighborhood = document.getElementById('neighborhood-filter').value;
+                    const bhkCheckedNodes = document.querySelectorAll('.bhk-cb:checked');
+                    const checkedBHKs = Array.from(bhkCheckedNodes).map(cb => cb.value).join(',');
+
+                    let qs = `?listingType=${filterType}&maxPrice=${maxLakhs * 100000}`;
+                    
+                    if (neighborhood !== 'All Bangalore') {
+                        qs += `&location=${encodeURIComponent(neighborhood)}`;
+                    }
+                    if (checkedBHKs.length > 0) {
+                        qs += `&bhkType=${encodeURIComponent(checkedBHKs)}`;
+                    }
+                    
+                    fetchAndRenderProperties(qs);
+                    
+                    if (showAllBtn) showAllBtn.style.display = 'none';
+                });
+            }
+        });
+    </script>
+<script>
+    document.querySelectorAll('section, .card, .p-content, .auth-container, .info-card, .form-container, .header-details, .gallery-grid').forEach((el, index) => {
+        el.classList.add('reveal');
+        el.style.transitionDelay = (index % 5) * 0.1 + 's';
+    });
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) entry.target.classList.add('active');
+        });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
